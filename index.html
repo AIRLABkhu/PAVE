@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="PAVE: Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods (ICML 2026 Spotlight)">
+  <meta property="og:title" content="PAVE — Stabilizing the Q-Gradient Field for Policy Smoothness" />
+  <meta property="og:description" content="ICML 2026 Spotlight. A critic-centric regularization framework that proves and exploits the differential-geometric origin of policy non-smoothness." />
+  <meta property="og:url" content="https://airlabkhu.github.io/PAVE/" />
+  <meta property="og:image" content="static/images/q_gradient_field_walker_td3.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:title" content="PAVE — Stabilizing the Q-Gradient Field for Policy Smoothness">
+  <meta name="twitter:description" content="ICML 2026 Spotlight. Critic-centric regularization derived from an Implicit-Function-Theorem bound on policy sensitivity.">
+  <meta name="twitter:image" content="static/images/q_gradient_field_walker_td3.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="keywords" content="reinforcement learning, policy smoothness, critic geometry, Q-gradient field, TD3, SAC, ICML 2026">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+  <title>PAVE: Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods</title>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'ams'
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <style>
+    .pave-figure {
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .pave-caption {
+      font-size: 12pt;
+      padding: 0.5em 0 1em;
+    }
+
+    .pave-thm {
+      background: #f6f8fa;
+      border-left: 4px solid #3273dc;
+      padding: 1em 1.2em;
+      margin: 1em 0;
+      border-radius: 4px;
+    }
+
+    .pave-thm .thm-title {
+      font-weight: 700;
+      color: #2b56a0;
+      margin-bottom: 0.4em;
+    }
+
+    .pave-proof {
+      background: #fafafa;
+      border-left: 3px solid #b5b5b5;
+      padding: 0.8em 1.1em;
+      margin: 0.8em 0 1.2em;
+      border-radius: 4px;
+      font-size: 0.97em;
+    }
+
+    .pave-proof .proof-title {
+      font-style: italic;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.3em;
+    }
+
+    .pave-remark {
+      background: #fffaf0;
+      border-left: 4px solid #d97706;
+      padding: 0.8em 1.1em;
+      margin: 0.8em 0 1.2em;
+      border-radius: 4px;
+      font-size: 0.97em;
+    }
+
+    .pave-remark .remark-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 0.3em;
+    }
+
+    .takeaway {
+      background: #ecfdf5;
+      border-left: 4px solid #10b981;
+      padding: 0.9em 1.1em;
+      margin: 1em 0;
+      border-radius: 4px;
+    }
+
+    .takeaway b {
+      color: #065f46;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods
+            </h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                Jeong Woon Lee<sup>*</sup>, Kyoleen Kwak<sup>*</sup>, Daeho Kim<sup>*</sup>, Hyoseok Hwang<sup>&dagger;</sup>
+                <br>
+                {jeongwoon, 2007kkl, daeho, hyoseok}@khu.ac.kr
+                <br>
+                <span style="font-size: 0.85em;"><sup>*</sup> Equal contribution &nbsp; <sup>&dagger;</sup> Corresponding author</span>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="http://airlab.khu.ac.kr/" target="_blank">Kyung Hee University AIRLAB</a><br>
+                ICML 2026 (Spotlight)
+              </span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://github.com/AIRLABkhu/PAVE" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Abstract -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Policies learned via continuous actor-critic methods often exhibit erratic, high-frequency oscillations,
+              making them unsuitable for physical deployment. Current approaches attempt to enforce smoothness by
+              directly regularizing the policy's output. We argue that this approach treats the symptom rather than the
+              cause. In this work, we theoretically establish that policy non-smoothness is fundamentally governed by
+              the differential geometry of the critic. By applying implicit differentiation to the actor-critic
+              objective, we prove that the sensitivity of the optimal policy is bounded by the ratio of the
+              Q-function's mixed-partial derivative (noise sensitivity) to its action-space curvature (signal
+              distinctness). To empirically validate this theoretical insight, we introduce
+              <em><b>P</b>olicy-<b>A</b>ware <b>V</b>alue-field <b>E</b>qualization</em> (PAVE), a critic-centric
+              regularization framework that treats the critic as a scalar field and <em>stabilizes</em> its induced
+              action-gradient field. PAVE rectifies the learning signal by minimizing the Q-gradient volatility while
+              preserving local curvature. Experimental results demonstrate that PAVE achieves smoothness comparable to
+              policy-side smoothness regularization methods, while maintaining competitive task performance, without
+              modifying the actor.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Method -->
+  <section class="hero is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">Method</h2>
+
+        <!-- ====================== Theory ====================== -->
+        <h4 class="title is-4">Theoretical Analysis: The Geometry of Policy Sensitivity</h4>
+
+        <p>
+          To remediate the fundamental origin of action instability in actor-critic methods, we analyze how the
+          differential geometry of the value function dictates the behavior of the induced policy. We derive the
+          sensitivity of the greedy policy $a^{*}(s) = \arg\max_{a} Q(s, a)$ with respect to state perturbations and
+          show, via the Implicit Function Theorem (IFT), that policy smoothness is governed by specific Hessian terms
+          of the critic.
+        </p>
+
+        <h5 class="title is-5">Implicit Policy Definition and Sensitivity Derivation</h5>
+
+        <p>
+          In the actor-critic paradigm, the actor $\pi_\phi(s)$ is optimized to approximate the maximizer of the
+          Q-function. Even when the actor is a neural network, its update direction is fundamentally driven by
+          $\nabla_a Q(s,\pi_\phi(s))$. The geometric regularity of the explicit maximizer
+          $a^{*}(s) = \arg\max_{a} Q(s, a)$ therefore imposes a fundamental limit on the learned policy:
+          $\pi_\phi$ cannot be smoother than $a^{*}$ without deviating from the optimal action.
+        </p>
+
+        <div class="pave-thm">
+          <div class="thm-title">Lemma 1 (Implicit Policy Jacobian).</div>
+          Let $Q : \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ be twice continuously differentiable. Assume that
+          for a given state $s$, $a^{*}(s)$ is a strict local maximum and an interior point of $\mathcal{A}$, so that
+          the action Hessian $\nabla^{2}_{aa} Q(s, a^{*}(s))$ is negative definite. Then the policy Jacobian
+          $J_{\pi}(s) = \nabla_s a^{*}(s)$ is given analytically by
+          $$
+          J_{\pi}(s) \;=\; -\bigl[\nabla^{2}_{aa} Q(s, a^{*}(s))\bigr]^{-1}\, \nabla^{2}_{sa} Q(s, a^{*}(s)).
+          $$
+        </div>
+
+        <div class="pave-proof">
+          <div class="proof-title">Proof.</div>
+          Since $a^{*}(s)$ is an interior extremum, it satisfies the first-order optimality condition
+          $\nabla_a Q(s, a^{*}(s)) = 0$. Treating this as a vector-valued mapping $G(s, a(s)) = 0$, the total
+          derivative with respect to $s$ gives, by the chain rule,
+          $$
+          \nabla^{2}_{sa} Q(s, a^{*}(s)) \;+\; \nabla^{2}_{aa} Q(s, a^{*}(s))\, \nabla_s a^{*}(s) \;=\; 0.
+          $$
+          By the strict-concavity assumption, $\nabla^{2}_{aa} Q(s, a^{*}(s))$ is invertible. Pre-multiplying by its
+          inverse yields the stated formula. $\blacksquare$
+        </div>
+
+        <div class="pave-remark">
+          <div class="remark-title">Remark.</div>
+          Lemma&nbsp;1 requires $a^{*}(s)$ to be an interior strict local maximum. When optimal actions lie on the
+          boundary of $\mathcal{A}$ or are not unique, the implicit function theorem does not apply and $J_\pi(s)$
+          may not be well-defined. In practice, continuous-control environments with $\tanh$-bounded actions rarely
+          saturate the boundary, and our empirical results confirm that the regularization motivated by this analysis
+          remains effective even when the assumption is not universally satisfied.
+        </div>
+
+        <p>
+          Geometrically, policy sensitivity is the product of an <em>inverse curvature</em> term and a
+          <em>mixed-partial coupling</em> term: $\nabla^{2}_{sa} Q$ acts as a forcing term that dictates how the
+          ascent direction shifts under state perturbations, while $[\nabla^{2}_{aa} Q]^{-1}$ acts as an
+          amplification factor determined by the flatness of the landscape. If the Q-surface is flat (low curvature),
+          the inverse Hessian explodes, rendering the policy hypersensitive to even negligible gradient rotations.
+        </p>
+
+        <h5 class="title is-5">Spectral Bounds on Lipschitz Continuity</h5>
+
+        <div class="pave-thm">
+          <div class="thm-title">Proposition 2 (Lipschitz Continuity Bound).</div>
+          Let $\|\cdot\|_2$ denote the spectral norm. Suppose
+          $\|\nabla^{2}_{sa} Q(s, a^{*}(s))\|_2 \le M$ and the action Hessian satisfies the strict concavity
+          condition $\lambda_{\max}(\nabla^{2}_{aa} Q(s, a^{*}(s))) \le -\mu < 0$. Then the induced greedy policy is
+          Lipschitz continuous with constant $L$ satisfying
+          $$
+          \|a^{*}(s) - a^{*}(s')\|_2 \;\le\; L\, \|s - s'\|_2,
+          \qquad
+          L \;\le\; \frac{M}{\mu}.
+          $$
+        </div>
+
+        <div class="pave-proof">
+          <div class="proof-title">Proof.</div>
+          Apply the spectral norm to the policy Jacobian from Lemma&nbsp;1 and use sub-multiplicativity:
+          $$
+          \|J_\pi(s)\|_2 \;\le\; \bigl\|[\nabla^{2}_{aa} Q]^{-1}\bigr\|_2 \cdot \|\nabla^{2}_{sa} Q\|_2 .
+          $$
+          <b>(i) Curvature bound.</b> The assumption $\lambda_{\max}(\nabla^{2}_{aa} Q) \le -\mu$ places the
+          spectrum of the Hessian inside $(-\infty, -\mu]$. The eigenvalues of the inverse Hessian are therefore
+          bounded in magnitude by $1/\mu$, giving
+          $\bigl\|[\nabla^{2}_{aa} Q]^{-1}\bigr\|_2 \le 1/\mu$.<br>
+          <b>(ii) Mixed-partial bound.</b> By hypothesis, $\|\nabla^{2}_{sa} Q\|_2 \le M$.<br>
+          Substituting and taking the supremum over $s$,
+          $L \triangleq \sup_{s} \|J_\pi(s)\|_2 \le M/\mu$. The Mean Value Inequality for vector-valued
+          differentiable functions then gives
+          $\|a^{*}(s) - a^{*}(s')\|_2 \le L\,\|s - s'\|_2 \le (M/\mu)\,\|s - s'\|_2$. $\blacksquare$
+        </div>
+
+        <div class="pave-remark">
+          <div class="remark-title">Remark.</div>
+          The condition $\lambda_{\max}(\nabla^{2}_{aa} Q(s, a^{*}(s))) \le -\mu < 0$ may not hold everywhere for
+          neural-network critics. In our experiments, unconstrained critics satisfy this condition in only
+          14&ndash;47% of visited states. The bound $L \le M/\mu$ therefore serves as a regularization motivation
+          rather than a universal guarantee. PAVE's $\mathcal{L}_{\mathrm{Curv}}$ improves satisfaction to
+          64&ndash;100% across environments.
+        </div>
+
+        <div class="takeaway">
+          <b>Theoretical implication.</b> The bound $L \le M/\mu$ shows that simply minimizing the gradient variance
+          (reducing $M$) is insufficient if the curvature $\mu$ also vanishes. Conventional regularizers tend to
+          flatten the Q-landscape, driving $\mu \to 0$, which can theoretically explode the sensitivity term
+          $\|[\nabla^{2}_{aa} Q]^{-1}\|$. PAVE is explicitly formulated to minimize $M$ while ensuring that $\mu$
+          stays strictly bounded away from zero.
+        </div>
+
+
+        <!-- ====================== PAVE losses ====================== -->
+        <p style="margin-bottom:1.5em;"></p>
+        <h4 class="title is-4">PAVE: Policy-Aware Value-field Equalization</h4>
+
+        <p>
+          PAVE directly enforces the geometric stability conditions derived above. Instead of constraining the actor,
+          PAVE regularizes the critic to <em>minimize the Lipschitz bound</em> $L \le M/\mu$ and to enforce
+          trajectory consistency. This is achieved by three synergistic objectives: (1) suppressing noise sensitivity
+          ($M$) via <em>Mixed-Partial Regularization</em>, (2) aligning temporal vector fields via <em>Vector Field
+          Consistency</em>, and (3) preserving curvature ($\mu$) via <em>Curvature Preservation</em> to prevent
+          geometric collapse. The losses below are finite-difference proxies that <em>incentivize</em> the desired
+          geometric properties rather than guaranteeing them.
+        </p>
+
+        <h5 class="title is-5">Mixed-Partial Regularization (MPR)</h5>
+
+        <p>
+          To minimize the numerator $M$ in the Lipschitz bound, we suppress the magnitude of $\nabla^{2}_{sa} Q$.
+          Direct construction of the mixed Hessian costs $\mathcal{O}(d^{2})$, which is prohibitive online. We
+          instead use a finite-difference proxy grounded in a Taylor expansion. Considering a small state
+          perturbation $\epsilon$,
+          $$
+          \nabla_a Q(s+\epsilon, a) \;=\; \nabla_a Q(s, a) + \nabla^{2}_{sa} Q(s,a)\,\epsilon + \mathcal{O}(\|\epsilon\|^{2}),
+          $$
+          so $\|\nabla_a Q(s+\epsilon, a) - \nabla_a Q(s, a)\|$ is an efficient proxy for the Hessian-vector product
+          $\|\nabla^{2}_{sa} Q\,\epsilon\|$. This motivates
+        </p>
+
+        <p style="text-align:center;">
+          $$
+          \mathcal{L}_{\mathrm{MPR}}(\theta)
+          \;=\;
+          \mathbb{E}_{\substack{(s,a)\sim\mathcal{D}\\ \epsilon \sim \mathcal{N}(0,\sigma^{2}I)}}
+          \Bigl[\;
+            \bigl\| \nabla_a Q(s+\epsilon, a) - \nabla_a Q(s, a) \bigr\|_2^{2}
+          \;\Bigr].
+          $$
+        </p>
+
+        <p>
+          <b>Formal justification.</b> Substituting the linear approximation and integrating over the isotropic
+          Gaussian noise $\epsilon$,
+          $$
+          \mathcal{L}_{\mathrm{MPR}} \;\approx\;
+          \mathbb{E}_\epsilon\!\left[\,\epsilon^{\top} (\nabla^{2}_{sa} Q)^{\top} (\nabla^{2}_{sa} Q)\, \epsilon\,\right]
+          \;=\; \sigma^{2}\,\|\nabla^{2}_{sa} Q\|_F^{2}.
+          $$
+          Since the spectral norm is upper-bounded by the Frobenius norm ($\|A\|_2 \le \|A\|_F$), minimizing
+          $\mathcal{L}_{\mathrm{MPR}}$ encourages a smaller upper bound on $M$.
+        </p>
+
+        <h5 class="title is-5">Vector Field Consistency (VFC)</h5>
+
+        <p>
+          MPR enforces spatial smoothness via isotropic perturbations, but stable robotic control also requires
+          <em>temporal</em> coherence along trajectories. Interpreting $\nabla_a Q(s, a)$ as the score function of an
+          implicit Boltzmann policy $p(a\mid s) \propto \exp(Q(s,a))$, we frame temporal stability as minimizing the
+          distributional shift of the policy across consecutive states &mdash; a Fisher-divergence-style objective:
+        </p>
+
+        <p style="text-align:center;">
+          $$
+          \mathcal{L}_{\mathrm{VFC}}(\theta)
+          \;=\;
+          \mathbb{E}_{(s_t, a_t, s_{t+1}) \sim \mathcal{D}}
+          \Bigl[\;
+            \bigl\| \nabla_a Q(s_t, a_t) - \nabla_a Q(s_{t+1}, a_t) \bigr\|_2^{2}
+          \;\Bigr].
+          $$
+        </p>
+
+        <p>
+          <b>Formal justification.</b> Using the first-order expansion $s_{t+1} \approx s_t + \Delta s_t$,
+          $$
+          \bigl\|\nabla_a Q(s_{t+1}, a_t) - \nabla_a Q(s_t, a_t)\bigr\|_2^{2}
+          \;\approx\;
+          \bigl\|\nabla^{2}_{sa} Q(s_t, a_t)\, \Delta s_t\bigr\|_2^{2}.
+          $$
+          Whereas MPR reduces $M$ globally, VFC encourages a smaller $M$ specifically along the state transitions
+          imposed by the environment dynamics ($\nabla^{2}_{sa} Q\,\Delta s_t$). This mitigates the "chattering"
+          effect caused by conflicting gradients at adjacent timesteps.
+        </p>
+
+        <h5 class="title is-5">Curvature Preservation (Curv)</h5>
+
+        <p>
+          Minimizing $\mathcal{L}_{\mathrm{MPR}}$ in isolation introduces a pathological risk: the network may
+          collapse $Q$ to a trivial flat plane (i.e.\ $\nabla_a Q \approx 0$ everywhere) to satisfy the smoothness
+          penalty. By Proposition&nbsp;2, if $Q$ becomes flat, $\|[\nabla^{2}_{aa} Q]^{-1}\|$ diverges, paradoxically
+          amplifying policy sensitivity. To preclude this "over-smoothing" collapse, we enforce a curvature lower
+          bound:
+        </p>
+
+        <p style="text-align:center;">
+          $$
+          \mathcal{L}_{\mathrm{Curv}}(\theta)
+          \;=\;
+          \mathbb{E}_{\substack{(s,a) \sim \mathcal{D}\\ v \sim p(v)}}
+          \Bigl[\;
+            \max\!\bigl(0,\; v^{\top} \nabla^{2}_{aa} Q(s, a)\, v + \delta \bigr)
+          \;\Bigr],
+          $$
+        </p>
+
+        <p>
+          where $\delta > 0$ is the minimum required sharpness. Computational efficiency is preserved by Hutchinson's
+          trace estimator with random Rademacher vectors $v$. To enable a valid Hessian computation we use SiLU
+          activations in the critic to ensure $C^{2}$ continuity.
+        </p>
+
+        <p>
+          <b>Formal justification.</b> This regularizer explicitly targets the denominator $\mu$ in the Lipschitz
+          bound $L \le M/\mu$. By penalizing projected curvature values $v^{\top} \nabla^{2}_{aa} Q\, v$ that exceed
+          $-\delta$, this objective incentivizes concavity via Hutchinson's trace estimator, which controls the
+          trace rather than individual eigenvalues. This encourages the maximum eigenvalue to remain negative,
+          helping to keep the inverse Hessian norm bounded and reducing sensitivity.
+        </p>
+
+        <h5 class="title is-5">Total Objective</h5>
+
+        <p>
+          The composite objective for the critic parameter $\theta$ is a weighted sum of the standard temporal-difference
+          regression loss and the three geometric regularizers:
+        </p>
+
+        <p style="text-align:center;">
+          $$
+          \mathcal{L}(\theta)
+          \;=\;
+          \mathcal{L}_{\mathrm{TD}}(\theta)
+          \;+\; \lambda_{1}\, \mathcal{L}_{\mathrm{MPR}}(\theta)
+          \;+\; \lambda_{2}\, \mathcal{L}_{\mathrm{VFC}}(\theta)
+          \;+\; \lambda_{3}\, \mathcal{L}_{\mathrm{Curv}}(\theta).
+          $$
+        </p>
+
+        <p>
+          Crucially, these geometric regularizers are applied <em>solely as auxiliary losses to the critic</em>. The
+          actor update mechanism remains unchanged, using standard policy gradients while benefiting from the paved,
+          well-conditioned Q-gradient landscape.
+        </p>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Results -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">What "PAVing" the Q-Gradient Field Looks Like</h2>
+
+        <p>
+          The figures below visualise the spectral norm of the mixed Hessian, $\|\nabla^{2}_{sa} Q\|_2$, as a 3-D
+          surface over a $50 \times 50$ sweep of (state dim, action dim). This is the empirical analogue of the
+          theoretical bound $L \le M/\mu$: each peak marks an $(s, a)$ where a small state perturbation can rotate
+          the action gradient sharply, directly upper-bounding how non-smooth any actor that climbs $\nabla_a Q$ can
+          become. The dominant axis is selected once per environment from the Base critic and then re-used for every
+          method, so the five panels in a row share the <em>same</em> axes. All panels share the same color scale
+          (Z-axis clipped at the Base 99-th percentile) so heights are directly comparable.
+        </p>
+
+        <p style="margin-bottom:1.5em;"></p>
+
+        <figure>
+          <img class="pave-figure" src="static/images/q_gradient_field_walker_td3.png"
+               alt="Walker Q-gradient field — TD3, five methods.">
+          <figcaption class="content has-text-centered pave-caption">
+            <b>Figure 1.</b> Walker2d Q-gradient field under TD3, SiLU-unified. Left to right: Base, CAPS, GRAD,
+            ASAP, PAVE. Baselines exhibit jagged landscapes with sharp spikes &mdash; this is the same
+            $\|\nabla^{2}_{sa} Q\|$ that controls policy non-smoothness. PAVE flattens these spikes into a stable,
+            paved manifold.
+          </figcaption>
+        </figure>
+
+        <p style="margin-bottom:1.5em;"></p>
+
+        <figure>
+          <img class="pave-figure" src="static/images/q_gradient_field_td3.png"
+               alt="TD3 Q-gradient field grid across six environments.">
+          <figcaption class="content has-text-centered pave-caption">
+            <b>Figure 2.</b> Comprehensive Q-gradient field under <b>TD3</b> (SiLU-unified). Rows top &rarr; bottom:
+            LunarLander, Pendulum, Reacher, Ant, Hopper, Walker. Columns left &rarr; right: Base, CAPS, GRAD, ASAP,
+            PAVE. PAVE has the lowest, smoothest surface in 5/6 environments, matching the quantitative reduction in
+            $M_{\sup}$ reported in the paper.
+          </figcaption>
+        </figure>
+
+        <p style="margin-bottom:1.5em;"></p>
+
+        <figure>
+          <img class="pave-figure" src="static/images/q_gradient_field_sac.png"
+               alt="SAC Q-gradient field grid across six environments.">
+          <figcaption class="content has-text-centered pave-caption">
+            <b>Figure 3.</b> Comprehensive Q-gradient field under <b>SAC</b> (SiLU-unified). Same protocol and
+            ordering as Figure&nbsp;2. The CAPS / GRAD / ASAP columns remain visually similar to Vanilla &mdash;
+            policy-side regularizers smooth what the actor outputs but leave the critic's geometry essentially
+            unchanged. Only PAVE acts on the geometry itself.
+          </figcaption>
+        </figure>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Conclusion -->
+  <section class="hero is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">Conclusion</h2>
+        <p>
+          We identify the critic's irregular geometry as the root of policy instability. Using the Implicit Function
+          Theorem, we prove that policy sensitivity is governed by the ratio of the Q-function's mixed-partial
+          volatility to its action-space curvature, $L \le M/\mu$. To validate this insight we propose PAVE, which
+          stabilizes this geometry via three lightweight, Hessian-free auxiliary critic losses. Empirical results
+          confirm that paving the Q-gradient field induces smooth policies <em>without actor-side constraints</em>,
+          substantiating the importance of a critic-centric perspective on continuous control.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</body>
+
+</html>
