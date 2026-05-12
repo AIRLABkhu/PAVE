@@ -235,6 +235,31 @@ parameterised training entry points used to produce the appendix experiments.
 
 ---
 
+## Acknowledgements
+
+This repository is built on top of the
+[**ASAP**](https://github.com/AIRLABkhu/ASAP) codebase (AAAI 2026), which
+provided the TD3 / SAC training and evaluation infrastructure that PAVE
+extends. We thank the ASAP authors for releasing a clean, well-organised
+research code base — many of the shared modules under
+`*/tests/modules/` (`controller`, `action_extractor`, `q_extractor`,
+`params`, `envs`, etc.) and the smoothness-score (`sm`) evaluation
+pipeline originate from that work, and PAVE is implemented as additional
+critic-side losses on top of it.
+
+If you use this code, please consider also citing ASAP:
+
+```bibtex
+@inproceedings{kwak2026enhancingcontrolpolicysmoothness,
+  title     = {Enhancing Control Policy Smoothness by Aligning Actions with Predictions from Preceding States},
+  author    = {Kwak, Kyoleen and Hwang, Hyoseok},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  year      = {2026}
+}
+```
+
+---
+
 ## Citation
 
 ```bibtex
