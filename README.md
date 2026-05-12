@@ -6,6 +6,10 @@ Official implementation of **PAVE (Policy-Aware Value-field Equalization)**, a c
 > Jeong Woon Lee\*, Kyoleen Kwak\*, Daeho Kim\*, Hyoseok Hwang.
 > *International Conference on Machine Learning (ICML), 2026 — Spotlight.*
 
+🌐 **Project page**: <https://airlabkhu.github.io/PAVE/>
+📄 **arXiv**: <https://arxiv.org/abs/2601.22970>
+💻 **Code (this repo)**: <https://github.com/AIRLABkhu/PAVE>
+
 ---
 
 ## Overview
