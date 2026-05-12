@@ -266,11 +266,11 @@ If you use this code, please consider also citing ASAP:
 ## Citation
 
 ```bibtex
-@inproceedings{lee2026pave,
-  title     = {Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods},
-  author    = {Lee, Jeong Woon and Kwak, Kyoleen and Kim, Daeho and Hwang, Hyoseok},
-  booktitle = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
-  year      = {2026}
+@article{lee2026stabilizing,
+  title={Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic},
+  author={Lee, Jeong Woon and Kwak, Kyoleen and Kim, Daeho and Hwang, Hyoseok},
+  journal={arXiv preprint arXiv:2601.22970},
+  year={2026}
 }
 ```
 
