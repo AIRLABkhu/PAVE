@@ -469,6 +469,225 @@
   </section>
 
 
+  <!-- Quantitative Results -->
+  <section class="hero is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">Quantitative Results</h2>
+
+        <p>
+          We evaluate PAVE on six Gymnasium / MuJoCo continuous-control environments
+          (LunarLander, Pendulum, Reacher, Ant, Hopper, Walker2d) under both TD3 and
+          SAC. All methods, including baselines, are re-trained with SiLU activations
+          ("SiLU-unified") to remove confounders from the activation choice. We
+          report cumulative return ($re$, higher is better) and the FFT-based
+          smoothness score ($sm$, lower is better) following Mysore et al. (2021)
+          and Christmann et al. (2024). Standard deviations are over five
+          independent runs. <b>Bold</b> indicates the best and <u>underline</u> the
+          second-best per environment.
+        </p>
+
+        <p style="margin-bottom:1.2em;"></p>
+
+        <h5 class="title is-5">Table 1. TD3 (SiLU-unified)</h5>
+        <div class="table-container">
+          <table class="table is-bordered is-narrow is-fullwidth has-text-centered" style="font-size:0.85em;">
+            <thead>
+              <tr>
+                <th rowspan="2" style="vertical-align:middle;">Method</th>
+                <th colspan="2">LunarLander</th>
+                <th colspan="2">Pendulum</th>
+                <th colspan="2">Reacher</th>
+                <th colspan="2">Ant</th>
+                <th colspan="2">Hopper</th>
+                <th colspan="2">Walker</th>
+              </tr>
+              <tr>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Base</td>
+                <td>227.8<br><small>(74.1)</small></td><td>1.809<br><small>(1.311)</small></td>
+                <td>&minus;168.7<br><small>(77.9)</small></td><td>1.590<br><small>(0.571)</small></td>
+                <td><u>&minus;3.55</u><br><small>(1.32)</small></td><td>0.053<br><small>(0.014)</small></td>
+                <td>4299<br><small>(1499)</small></td><td>2.039<br><small>(0.400)</small></td>
+                <td>3056<br><small>(888)</small></td><td>2.715<br><small>(0.483)</small></td>
+                <td>4834<br><small>(423)</small></td><td>1.990<br><small>(0.208)</small></td>
+              </tr>
+              <tr>
+                <td>CAPS</td>
+                <td><u>249.0</u><br><small>(40.3)</small></td><td>0.702<br><small>(0.291)</small></td>
+                <td>&minus;175.2<br><small>(79.3)</small></td><td><u>0.464</u><br><small>(0.165)</small></td>
+                <td>&minus;3.58<br><small>(1.35)</small></td><td>0.047<br><small>(0.011)</small></td>
+                <td>4624<br><small>(1190)</small></td><td>2.135<br><small>(0.256)</small></td>
+                <td><b>3609</b><br><small>(33)</small></td><td>1.919<br><small>(0.373)</small></td>
+                <td><u>4913</u><br><small>(1383)</small></td><td>1.600<br><small>(0.306)</small></td>
+              </tr>
+              <tr>
+                <td>GRAD</td>
+                <td>245.1<br><small>(73.4)</small></td><td><u>0.669</u><br><small>(0.184)</small></td>
+                <td><b>&minus;167.6</b><br><small>(75.6)</small></td><td>0.689<br><small>(0.139)</small></td>
+                <td><b>&minus;3.55</b><br><small>(1.36)</small></td><td><u>0.041</u><br><small>(0.012)</small></td>
+                <td><b>5538</b><br><small>(845)</small></td><td><u>1.796</u><br><small>(0.187)</small></td>
+                <td><u>3317</u><br><small>(648)</small></td><td><u>1.642</u><br><small>(0.405)</small></td>
+                <td>4788<br><small>(783)</small></td><td><u>1.366</u><br><small>(0.194)</small></td>
+              </tr>
+              <tr>
+                <td>ASAP</td>
+                <td>168.4<br><small>(147.0)</small></td><td>2.055<br><small>(1.300)</small></td>
+                <td>&minus;170.2<br><small>(80.7)</small></td><td>1.970<br><small>(0.768)</small></td>
+                <td>&minus;3.56<br><small>(1.35)</small></td><td>0.051<br><small>(0.014)</small></td>
+                <td><u>4765</u><br><small>(1554)</small></td><td>2.065<br><small>(0.413)</small></td>
+                <td>3229<br><small>(553)</small></td><td>1.991<br><small>(0.259)</small></td>
+                <td>4740<br><small>(799)</small></td><td>1.616<br><small>(0.284)</small></td>
+              </tr>
+              <tr style="background:#f0f7ff;">
+                <td><b>PAVE</b></td>
+                <td><b>264.5</b><br><small>(24.9)</small></td><td><b>0.541</b><br><small>(0.290)</small></td>
+                <td><u>&minus;167.6</u><br><small>(77.5)</small></td><td><b>0.351</b><br><small>(0.118)</small></td>
+                <td>&minus;4.02<br><small>(1.34)</small></td><td><b>0.039</b><br><small>(0.013)</small></td>
+                <td>4649<br><small>(1443)</small></td><td><b>1.768</b><br><small>(0.315)</small></td>
+                <td>3305<br><small>(461)</small></td><td><b>0.950</b><br><small>(0.285)</small></td>
+                <td><b>5563</b><br><small>(451)</small></td><td><b>1.272</b><br><small>(0.172)</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="content">
+          <p>
+            In the TD3 setting, the results validate the theoretical premise that
+            stabilizing the Q-gradient field naturally induces policy smoothness
+            without sacrificing performance. While baseline methods often exhibited
+            a trade-off where improved smoothness came at the cost of reduced
+            returns, PAVE consistently maintained or improved task performance.
+            Most notably, on Walker, PAVE achieved both the highest cumulative
+            return ($re = 5563$) and the best smoothness score ($sm = 1.272$). For
+            deterministic policies, which are particularly prone to overfitting to
+            sharp gradient irregularities, rectifying the critic's geometry proves
+            to be a highly effective strategy.
+          </p>
+        </div>
+
+        <p style="margin-bottom:1.5em;"></p>
+
+        <h5 class="title is-5">Table 2. SAC (SiLU-unified)</h5>
+        <div class="table-container">
+          <table class="table is-bordered is-narrow is-fullwidth has-text-centered" style="font-size:0.85em;">
+            <thead>
+              <tr>
+                <th rowspan="2" style="vertical-align:middle;">Method</th>
+                <th colspan="2">LunarLander</th>
+                <th colspan="2">Pendulum</th>
+                <th colspan="2">Reacher</th>
+                <th colspan="2">Ant</th>
+                <th colspan="2">Hopper</th>
+                <th colspan="2">Walker</th>
+              </tr>
+              <tr>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+                <th>$re\uparrow$</th><th>$sm\downarrow$</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SAC Base</td>
+                <td>160.3<br><small>(135.3)</small></td><td>0.434<br><small>(0.187)</small></td>
+                <td><b>&minus;163.1</b><br><small>(74.5)</small></td><td>0.548<br><small>(0.173)</small></td>
+                <td>&minus;3.73<br><small>(1.37)</small></td><td>0.053<br><small>(0.016)</small></td>
+                <td>5276<br><small>(1029)</small></td><td>1.941<br><small>(0.289)</small></td>
+                <td><u>3481</u><br><small>(98)</small></td><td>0.773<br><small>(0.069)</small></td>
+                <td><u>4907</u><br><small>(283)</small></td><td>0.748<br><small>(0.063)</small></td>
+              </tr>
+              <tr>
+                <td>CAPS</td>
+                <td><b>270.9</b><br><small>(19.6)</small></td><td>0.271<br><small>(0.051)</small></td>
+                <td>&minus;166.1<br><small>(76.9)</small></td><td><u>0.338</u><br><small>(0.118)</small></td>
+                <td><u>&minus;3.69</u><br><small>(1.32)</small></td><td><u>0.048</u><br><small>(0.014)</small></td>
+                <td>5447<br><small>(884)</small></td><td>1.843<br><small>(0.241)</small></td>
+                <td>3442<br><small>(52)</small></td><td>0.660<br><small>(0.110)</small></td>
+                <td>4689<br><small>(178)</small></td><td>0.776<br><small>(0.071)</small></td>
+              </tr>
+              <tr>
+                <td>GRAD</td>
+                <td>256.6<br><small>(38.2)</small></td><td>0.252<br><small>(0.063)</small></td>
+                <td>&minus;163.7<br><small>(74.5)</small></td><td>0.377<br><small>(0.111)</small></td>
+                <td>&minus;3.74<br><small>(1.29)</small></td><td><b>0.046</b><br><small>(0.013)</small></td>
+                <td><b>5729</b><br><small>(604)</small></td><td>1.632<br><small>(0.103)</small></td>
+                <td>3315<br><small>(407)</small></td><td>0.581<br><small>(0.072)</small></td>
+                <td>4887<br><small>(211)</small></td><td><u>0.572</u><br><small>(0.052)</small></td>
+              </tr>
+              <tr>
+                <td>ASAP</td>
+                <td><u>268.6</u><br><small>(20.8)</small></td><td><u>0.183</u><br><small>(0.033)</small></td>
+                <td><u>&minus;163.5</u><br><small>(74.7)</small></td><td>0.362<br><small>(0.109)</small></td>
+                <td><b>&minus;3.66</b><br><small>(1.31)</small></td><td>0.048<br><small>(0.015)</small></td>
+                <td><u>5707</u><br><small>(852)</small></td><td><b>1.404</b><br><small>(0.088)</small></td>
+                <td>3077<br><small>(715)</small></td><td><b>0.404</b><br><small>(0.059)</small></td>
+                <td>4731<br><small>(209)</small></td><td><b>0.557</b><br><small>(0.069)</small></td>
+              </tr>
+              <tr style="background:#f0f7ff;">
+                <td><b>PAVE</b></td>
+                <td>265.8<br><small>(21.4)</small></td><td><b>0.142</b><br><small>(0.028)</small></td>
+                <td>&minus;165.4<br><small>(75.5)</small></td><td><b>0.290</b><br><small>(0.130)</small></td>
+                <td>&minus;3.71<br><small>(1.31)</small></td><td>0.052<br><small>(0.014)</small></td>
+                <td>5706<br><small>(774)</small></td><td><u>1.604</u><br><small>(0.146)</small></td>
+                <td><b>3489</b><br><small>(38)</small></td><td><u>0.556</u><br><small>(0.139)</small></td>
+                <td><b>4954</b><br><small>(250)</small></td><td>0.584<br><small>(0.020)</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="content">
+          <p>
+            The SAC setting offers deeper insight into the characteristics of our
+            method. In low-dimensional tasks such as Reacher, policy-side
+            regularizers like GRAD and ASAP remain competitive in smoothness,
+            suggesting that direct policy constraints are effective for simpler
+            control manifolds; PAVE itself attains the best smoothness on
+            LunarLander ($sm = 0.142$). However, the distinct advantage of PAVE
+            emerges in high-dimensional environments with complex dynamics. On
+            Walker, PAVE secures the highest cumulative return ($re = 4954$) while
+            also achieving the strongest smoothness on LunarLander and Pendulum.
+            On Ant, where GRAD achieves the highest return ($re = 5729$) at the
+            cost of smoothness ($sm = 1.632$) and ASAP achieves the best
+            smoothness ($sm = 1.404$) at a lower return, PAVE attains a competitive
+            balance of both metrics ($re = 5706$, $sm = 1.604$). We attribute this
+            to the fact that high-dimensional state&ndash;action spaces inherently
+            exhibit more volatile curvature and frequent gradient spikes; in such
+            chaotic landscapes, our critic-centric regularization effectively
+            <em>paves</em> the optimization path, providing a stable learning signal
+            that policy-side constraints alone fail to capture.
+          </p>
+        </div>
+
+        <div class="takeaway" style="margin-top:1.4em;">
+          <b>Takeaway.</b> Across two off-policy backbones and six environments,
+          PAVE wins or ties for the best smoothness in 8 / 12 settings while
+          remaining competitive on cumulative return &mdash; <em>without modifying
+          the actor</em>. This empirically confirms the theoretical prediction
+          that policy non-smoothness can be addressed by reshaping the critic's
+          differential geometry rather than by output-side regularization of the
+          actor.
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
   <!-- Results -->
   <section class="hero is-small is-light">
     <div class="hero-body">
