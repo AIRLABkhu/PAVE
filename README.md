@@ -75,11 +75,11 @@ The full TD3 sweep (6 environments × 5 methods, same protocol) and the SAC coun
 
 These figures are the empirical analogue of the theoretical bound `L ≤ M/μ`. Each panel is a 3-D surface plot of the spectral norm of the mixed Hessian, computed *exactly* via autograd on the trained critic; the visualisation is independent of the policy used during training.
 
-### TD3 (SiLU-unified, seed = 652165)
+### TD3 (SiLU-unified)
 
 ![TD3 Q-gradient field grid](figures/q_gradient_field_td3.png)
 
-### SAC (SiLU-unified, seed = 652165)
+### SAC (SiLU-unified)
 
 ![SAC Q-gradient field grid](figures/q_gradient_field_sac.png)
 
@@ -88,7 +88,7 @@ Columns (left → right): Base/Vanilla, CAPS, GRAD, ASAP, PAVE.*
 
 ### How the figures are computed
 
-1. **Pick the dominant axis (per environment).** For each trained Base critic, scan all `(state_dim_i, action_dim_j)` pairs and pick the pair that maximises `|∂²Q / (∂s_i ∂a_j)|` over a sample batch. This identifies the (state, action) coordinate where the critic geometry matters most.
+1. **Pick the dominant axis (once per environment, from Base).** For each environment, scan all `(state_dim_i, action_dim_j)` pairs *on the trained Base critic* and pick the pair that maximises `|∂²Q / (∂s_i ∂a_j)|` over a sample batch. This identifies the (state, action) coordinate where the Base critic is most volatile. **The same `(s_i, a_j)` pair is then re-used for every method (Base, CAPS, GRAD, ASAP, PAVE)** so that all five panels in a row share the *same* axes — no method gets to pick its own favourable slice. The comparison therefore happens on the region the (unregularised) Base model itself flagged as the worst case.
 2. **Sweep on a 50 × 50 grid.** Centred at a reference `(s, a)`, sweep the chosen state dim over `[−1.0, 1.0]` and the chosen action dim over `[−1.5, 1.5]`. The other dimensions are held at the reference value.
 3. **Compute the *full* mixed Hessian per grid point.** For each action dim `a_i`, take `∂Q/∂a_i` then differentiate it w.r.t. the entire state vector via autograd (`create_graph=True`), giving one row of `∇²_sa Q ∈ R^{d_a × d_s}`. Stack rows to assemble the full mixed Hessian.
 4. **Reduce to a scalar.** Take its spectral norm `‖∇²_sa Q‖₂` (largest singular value via SVD). This is the `M` in `L ≤ M/μ`.
@@ -157,20 +157,20 @@ pip install numpy scipy pandas matplotlib tqdm tensorboard
 ### TD3
 ```bash
 cd td3/tests
-# Train PAVE on a single environment / seed
-python test_all.py --env ant     --algo pave_td3 --seed 178132
+# Train PAVE on a single environment
+python test_all.py --env ant    --algo pave_td3
 
-# Train all baselines
-python test_all.py --env walker  --algo base_td3 --seed 178132
-python test_all.py --env walker  --algo caps_td3 --seed 178132
-python test_all.py --env walker  --algo grad_td3 --seed 178132
-python test_all.py --env walker  --algo asap_td3 --seed 178132
+# Train baselines under the same setting
+python test_all.py --env walker --algo base_td3
+python test_all.py --env walker --algo caps_td3
+python test_all.py --env walker --algo grad_td3
+python test_all.py --env walker --algo asap_td3
 ```
 
 ### SAC
 ```bash
 cd sac/tests
-python test_all.py --env ant --algo pave_sac --seed 178132
+python test_all.py --env ant --algo pave_sac
 ```
 
 ### Hyperparameters
@@ -181,9 +181,6 @@ which mirrors the role of `μ` in the bound `L ≤ M/μ`). Per-environment value
 are hard-coded in `td3/tests/modules/params.py` and `sac/tests/modules/params.py`,
 and are listed in Tables 7–8 of the paper. The perturbation scale `σ = 0.01`
 and curvature floor `δ = 1.0` are fixed across all environments.
-
-The seeds used in the paper are stored in `td3/tests/seeds.txt` and
-`sac/tests/seeds.txt`; evaluation seeds are in `validation_seeds.txt`.
 
 ---
 
@@ -220,15 +217,14 @@ The smoothness score `sm` is the spectral metric of
 
 ## Reproducing the Paper
 
-Each environment is run for 5 seeds (`178132, 410580, 922852, 787576, 660993`).
-The full SiLU-unified TD3 / SAC tables in the paper are reproduced by:
+Each (env × method) cell is run for multiple independent runs and the
+results are aggregated as reported in the paper. The full SiLU-unified
+TD3 / SAC tables are reproduced by sweeping the (env × method) grid:
 
 ```bash
 for env in lunar pendulum reacher ant hopper walker; do
   for algo in base_td3 caps_td3 grad_td3 asap_td3 pave_td3; do
-    for seed in 178132 410580 922852 787576 660993; do
-      python td3/tests/test_all.py --env $env --algo $algo --seed $seed
-    done
+    python td3/tests/test_all.py --env $env --algo $algo
   done
 done
 ```
