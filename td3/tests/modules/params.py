@@ -242,25 +242,39 @@ alg_args = dict({
     ),
     "pave" : dict(
         ant = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.005,
+            grad_lamC = 0.5,
         ),
         hopper = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.005,
+            grad_lamC = 0.5,
         ),
         humanoid = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.005,
+            grad_lamC = 0.5,
         ),
         lunar = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.1,
+            grad_lamC = 0.01,
         ),
         reacher = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.1,
+            grad_lamC = 0.01,
         ),
         pendulum = dict(
-            grad_lamT = 1.0
+            grad_lamS = 2.0,
+            grad_lamT = 0.005,
+            grad_lamC = 2.0,
         ),
         walker = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.1,
+            grad_lamC = 0.01,
         ),
     ),
 })

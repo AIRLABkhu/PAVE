@@ -39,7 +39,6 @@ save_dir_root = f"./td3/results/pths/"
 logs_dir_root = f"./td3/results/tensorboard_logs/"
 seed_file_path = "./td3/tests/seeds.txt"
 result_dir_root = f"./td3/results/"
-max_num = 10
 max_concurrent_num = 5
 
 def load_seeds(filepath):
@@ -68,6 +67,16 @@ parser.add_argument(
     default="auto",
     help="Device to use for training: 'cpu', 'cuda', or 'cuda:<id>'."
 )
+
+# argparse에 추가
+parser.add_argument("--grad_lamT", type=float, default=None)
+parser.add_argument("--grad_lamS", type=float, default=None)
+parser.add_argument("--grad_lamC", type=float, default=None)
+parser.add_argument("--grad_sigma", type=float, default=None, help="MPR noise std (default: 0.01 in model)")
+parser.add_argument("--grad_delta", type=float, default=None, help="Curvature margin (default: 1.0 in model)")
+parser.add_argument("--start_num", type=int, default=0, help="Start index for seeds (0-based).")
+parser.add_argument("--max_num", type=int, default=5, help="Number of seeds to run.")
+
 args = parser.parse_args()
 print(f"Selected envs: {args.envs}")
 print(f"Selected algs: {args.algs}")
@@ -82,9 +91,25 @@ train_envs = args.envs #["ant", "hopper", "humanoid", "lunar", "pendulum", "reac
 # -> 모든 env 테스트시 12시간, 모든 알고리즘 테스트시 약 60시간
 
 seeds = load_seeds(seed_file_path)
-if len(seeds) < max_num:
-    raise ValueError(f"Not enough seeds in {seed_file_path}: required {max_num}, found {len(seeds)}")
+start_num = args.start_num
+max_num = args.max_num
+if len(seeds) < start_num + max_num:
+    raise ValueError(f"Not enough seeds in {seed_file_path}: required {start_num + max_num}, found {len(seeds)}")
 
+
+if "pave" in train_algs:
+    for env_name in train_envs:
+        if args.grad_lamT is not None:
+            alg_args["pave"][env_name]["grad_lamT"] = args.grad_lamT
+        if args.grad_lamS is not None:
+            alg_args["pave"][env_name]["grad_lamS"] = args.grad_lamS
+        if args.grad_lamC is not None:
+            alg_args["pave"][env_name]["grad_lamC"] = args.grad_lamC
+        if args.grad_sigma is not None:
+            alg_args["pave"][env_name]["grad_sigma"] = args.grad_sigma
+        if args.grad_delta is not None:
+            alg_args["pave"][env_name]["grad_delta"] = args.grad_delta
+            
 jobs = []
 for env_name in train_envs:
 
@@ -92,9 +117,11 @@ for env_name in train_envs:
     log_dir = os.path.join(logs_dir_root, env_name) + '/'
 
 
-    os.makedirs(save_dir, exist_ok=True)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        time.sleep(2)
 
-    for num in range(5, max_num):
+    for num in range(start_num, start_num + max_num):
         seed = seeds[num]
         for alg_name in train_algs:
             # alg_cnts[alg_name](seed, env_timestep[env_name], save_dir, log_dir, train_envs_dict[env_name], env_args[env_name], alg_args[alg_name][env_name])

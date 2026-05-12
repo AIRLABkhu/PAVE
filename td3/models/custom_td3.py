@@ -88,10 +88,10 @@ class CustomTD3(TD3):
             verbose=verbose,
             device=device,
             seed=seed,
-            sde_support=False,
+            #sde_support=False,
             optimize_memory_usage=optimize_memory_usage,
-            supported_action_spaces=(spaces.Box,),
-            support_multi_env=True,
+            #supported_action_spaces=(spaces.Box,),
+            #support_multi_env=True,
         )
 
         self.policy_delay = policy_delay

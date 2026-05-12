@@ -112,12 +112,15 @@ def test_q(root_dir, al_name, env_name, deterministic=True, mode="rgb_array"):
         counter = 0
         if env_name not in train_envs_dict:
             print(f"invalid env : {env_name}")
-            return 0.0, 0.0, 0.0, 0.0
+            return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 # Return 6 values
         save_dir = root_dir + env_name + "/"
         env = train_envs_dict[env_name](mode)()
         files = find_matching_files(save_dir, al_name)
+        
         q_ss_list = []
         q_sa_list = []
+        q_aa_list = [] # [Added] AA list
+
         for filename in files:
             model = TD3.load(f"{save_dir}{filename}", env=env)
             obs, info = env.reset(seed=seeds[counter])
@@ -138,8 +141,9 @@ def test_q(root_dir, al_name, env_name, deterministic=True, mode="rgb_array"):
 
                     grad_sa_sum = 0.0
                     grad_ss_sum = 0.0
+                    grad_aa_sum = 0.0 # [Added]
 
-                    # ∂Q / ∂a
+                    # 1. ∂Q / ∂a
                     grad_a = th.autograd.grad(
                         q1,
                         action_tensor,
@@ -147,15 +151,27 @@ def test_q(root_dir, al_name, env_name, deterministic=True, mode="rgb_array"):
                         retain_graph=True
                     )[0]   # shape: (1, action_dim)
 
-                    # ∂²Q / ∂s∂a
+                    # [Added] 2. ∂²Q / ∂a∂a (Trace)
+                    # grad_a를 다시 action_tensor로 미분하여 대각 성분(Curvature) 합 계산
+                    for i in range(grad_a.shape[1]):
+                        grad_aa_i = th.autograd.grad(
+                            grad_a[0, i],
+                            action_tensor,
+                            create_graph=True,
+                            retain_graph=True
+                        )[0]
+                        grad_aa_sum += grad_aa_i[0, i].item()
+
+                    # 3. ∂²Q / ∂s∂a
                     grad_sa = th.autograd.grad(
                         grad_a.sum(),
                         obs_tensor,
-                        create_graph=True
+                        create_graph=True,
+                        retain_graph=True # retain_graph 추가 권장
                     )[0]   # shape: (1, obs_dim)
                     grad_sa_sum += th.norm(grad_sa).item()
 
-                    # nabla ss는 너무 커서 그냥 trace만 구할거임
+                    # 4. ∂²Q / ∂s∂s (Trace)
                     grad_s = th.autograd.grad(
                         q1,
                         obs_tensor,
@@ -176,8 +192,7 @@ def test_q(root_dir, al_name, env_name, deterministic=True, mode="rgb_array"):
 
                     q_ss_list.append(grad_ss_sum)
                     q_sa_list.append(grad_sa_sum)
-
-                    # print(f"grad_ss: {grad_ss_sum}, grad_sa: {grad_sa_sum}")
+                    q_aa_list.append(abs(grad_aa_sum)) # [Added] 절대값 크기 저장
 
                     obs, reward, terminated, truncated, info = env.step(action)
                     total_reward += reward
@@ -185,21 +200,25 @@ def test_q(root_dir, al_name, env_name, deterministic=True, mode="rgb_array"):
                         obs, info = env.reset(seed=seeds[counter])
                         counter += 1
                         break
+        
         q_ss_avg = np.mean(q_ss_list)
         q_ss_std = np.std(q_ss_list)
         q_sa_avg = np.mean(q_sa_list)
         q_sa_std = np.std(q_sa_list)
-        return float(q_ss_avg), float(q_ss_std), float(q_sa_avg), float(q_sa_std)
+        q_aa_avg = np.mean(q_aa_list) # [Added]
+        q_aa_std = np.std(q_aa_list)  # [Added]
+        
+        return float(q_ss_avg), float(q_ss_std), float(q_sa_avg), float(q_sa_std), float(q_aa_avg), float(q_aa_std)
+
     except Exception as e:
         print("ERROR:", e)
         raise
-    return 0.0, 0.0, 0.0, 0.0
+    return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
 
 def test_some_path(root_dir, deterministic=True, add_al_names : list[str] = [], sub_dir=""):
     basic_al = []
     basic_envs = list(train_envs_dict.keys())
-    # basic_envs = ["hopper"]
 
     all_al = basic_al + add_al_names
 
@@ -207,58 +226,56 @@ def test_some_path(root_dir, deterministic=True, add_al_names : list[str] = [], 
     nabla_ss_std_rows = [["al_name"]+basic_envs]
     nabla_sa_mean_rows = [["al_name"]+basic_envs]
     nabla_sa_std_rows = [["al_name"]+basic_envs]
+    # [Added] AA Rows
+    nabla_aa_mean_rows = [["al_name"]+basic_envs]
+    nabla_aa_std_rows = [["al_name"]+basic_envs]
 
     combined_path = os.path.join(root_dir, sub_dir)
     os.makedirs(combined_path, exist_ok=True)
 
-    print("Testing Q-function gradients...")
+    print("Testing Q-function gradients (SS, SA, AA)...")
     
     for al_name in all_al:
         nabla_ss_mean_row = [al_name]
         nabla_ss_std_row = [al_name]
         nabla_sa_mean_row = [al_name]
         nabla_sa_std_row = [al_name]
+        nabla_aa_mean_row = [al_name] # [Added]
+        nabla_aa_std_row = [al_name]  # [Added]
+        
         for env_name in basic_envs:
-            smoothness_mean, smoothness_std, reward_mean, reward_std = test_q(root_dir, al_name, env_name, deterministic)
+            # [Updated] Unpack 6 values
+            ss_m, ss_s, sa_m, sa_s, aa_m, aa_s = test_q(root_dir, al_name, env_name, deterministic)
 
-            nabla_ss_mean_row.append(smoothness_mean)
-            nabla_ss_std_row.append(smoothness_std)
-            nabla_sa_mean_row.append(reward_mean)
-            nabla_sa_std_row.append(reward_std)
+            nabla_ss_mean_row.append(ss_m)
+            nabla_ss_std_row.append(ss_s)
+            nabla_sa_mean_row.append(sa_m)
+            nabla_sa_std_row.append(sa_s)
+            nabla_aa_mean_row.append(aa_m) # [Added]
+            nabla_aa_std_row.append(aa_s)  # [Added]
+            
         nabla_ss_mean_rows.append(nabla_ss_mean_row)
         nabla_ss_std_rows.append(nabla_ss_std_row)
         nabla_sa_mean_rows.append(nabla_sa_mean_row)
         nabla_sa_std_rows.append(nabla_sa_std_row)
+        nabla_aa_mean_rows.append(nabla_aa_mean_row) # [Added]
+        nabla_aa_std_rows.append(nabla_aa_std_row)   # [Added]
 
-    
+    # Write existing CSVs
     with open(os.path.join(combined_path, "nabla_ss_mean.csv"), mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-
-        # 3) 한 줄씩 쓰기
-        for row in nabla_ss_mean_rows:
-            writer.writerow(row)
-    
+        writer = csv.writer(f); writer.writerows(nabla_ss_mean_rows) # Simplified logic
     with open(os.path.join(combined_path, "nabla_ss_std.csv"), mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-
-        # 3) 한 줄씩 쓰기
-        for row in nabla_ss_std_rows:
-            writer.writerow(row)
-    
+        writer = csv.writer(f); writer.writerows(nabla_ss_std_rows)
     with open(os.path.join(combined_path, "nabla_sa_mean.csv"), mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-
-        # 3) 한 줄씩 쓰기
-        for row in nabla_sa_mean_rows:
-            writer.writerow(row)
-    
+        writer = csv.writer(f); writer.writerows(nabla_sa_mean_rows)
     with open(os.path.join(combined_path, "nabla_sa_std.csv"), mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f); writer.writerows(nabla_sa_std_rows)
 
-        # 3) 한 줄씩 쓰기
-        for row in nabla_sa_std_rows:
-            writer.writerow(row)
-
+    # [Added] Write AA CSVs
+    with open(os.path.join(combined_path, "nabla_aa_mean.csv"), mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f); writer.writerows(nabla_aa_mean_rows)
+    with open(os.path.join(combined_path, "nabla_aa_std.csv"), mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f); writer.writerows(nabla_aa_std_rows)
     
 
     

@@ -17,6 +17,7 @@ from models.asap_sac import ASAPSAC, ASAPPolicy_soft
 from models.asap_lips_sac import ASAPLIPSSAC, ASAPLIPSPolicy_soft
 from models.caps_lips_sac import CAPSLipsSAC
 from models.pave_sac import PAVE_SAC
+from models.pave_lips_sac import PAVE_LIPS_SAC
 
 def train_vanilla(seed:int, total_time_steps:int, save_dir:str, log_dir:str, mkenv_func : Callable, env_args:dict, alg_args:dict):
     if not os.path.exists(save_dir):
@@ -206,6 +207,23 @@ def train_caps_lips_lam_test(seed:int, total_time_steps:int, save_dir:str, log_d
                     **sac_args)
     model.learn(total_timesteps=total_time_steps, tb_log_name=f"CAPS_LIPS_SAC_lamS{alg_args['caps_lamS']}_lamT{alg_args['caps_lamT']}_lips{alg_args['lips_lam']}_{seed}")
     model.save(f"{save_dir}caps_lips_sac_lamS{alg_args['caps_lamS']}_lamT{alg_args['caps_lamT']}_lips{alg_args['lips_lam']}_{seed}")
+    vec_env.close()
+    del model
+
+def train_pave_lips(seed:int, total_time_steps:int, save_dir:str, log_dir:str, mkenv_func : Callable, env_args:dict, alg_args:dict):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    n_envs = 1
+    if 'n_envs' in env_args:
+        n_envs = env_args['n_envs']
+    vec_env = DummyVecEnv([mkenv_func() for _ in range(n_envs)])
+    vec_env = VecMonitor(vec_env)
+    sac_args = {k: v for k, v in env_args.items() if k != "n_envs"}
+    sac_args.update(alg_args)
+    model = PAVE_LIPS_SAC(LipsSACPolicy, vec_env, verbose=0, tensorboard_log=log_dir, seed=seed,
+                    **sac_args)
+    model.learn(total_timesteps=total_time_steps, tb_log_name=f"PAVE_LIPS_SAC_{seed}")
+    model.save(f"{save_dir}pave_lips_sac_{seed}")
     vec_env.close()
     del model
 

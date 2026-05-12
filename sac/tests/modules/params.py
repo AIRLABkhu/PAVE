@@ -237,25 +237,76 @@ alg_args = dict({
     ),
     "pave" : dict(
         ant = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
         ),
         hopper = dict(
-            grad_lamT = 1.0
+            grad_lamS = 2.0,
+            grad_lamT = 0.0005,
+            grad_lamC = 3.0,
         ),
         humanoid = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
         ),
         lunar = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.5,
+            grad_lamC = 0.05,
         ),
         reacher = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
         ),
         pendulum = dict(
-            grad_lamT = 1.0
+            grad_lamS = 0.1,
+            grad_lamT = 0.005,
+            grad_lamC = 0.5,
         ),
         walker = dict(
-            grad_lamT = 1.0
+            grad_lamS = 2.0,
+            grad_lamT = 0.005,
+            grad_lamC = 2.0,
+        ),
+    ),
+    "pave_lips" : dict(
+        ant = dict(
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
+        ),
+        hopper = dict(
+            grad_lamS = 2.0,
+            grad_lamT = 0.0005,
+            grad_lamC = 3.0,
+        ),
+        humanoid = dict(
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
+        ),
+        lunar = dict(
+            grad_lamS = 0.1,
+            grad_lamT = 0.5,
+            grad_lamC = 0.05,
+        ),
+        reacher = dict(
+            grad_lamS = 0.1,
+            grad_lamT = 0.0005,
+            grad_lamC = 1.0,
+        ),
+        pendulum = dict(
+            grad_lamS = 0.1,
+            grad_lamT = 0.005,
+            grad_lamC = 0.5,
+        ),
+        walker = dict(
+            grad_lamS = 2.0,
+            grad_lamT = 0.005,
+            grad_lamC = 2.0,
         ),
     ),
 })

@@ -11,7 +11,7 @@ from stable_baselines3.common.env_util import make_vec_env
 
 from modules.action_extractor import test_some_path
 
-from modules.controller import train_vanilla, train_caps, train_asap, train_l2c2, train_grad, train_pave
+from modules.controller import train_pave_lips
 from modules.envs import make_ant_env, make_hopper_env, make_humanoid_env, make_lunar_env, make_pendulum_env, make_reacher_env, make_walker_env
 
 from modules.params import env_timestep, env_args, alg_args
@@ -27,12 +27,7 @@ train_envs_dict = dict({
 })
 
 alg_cnts = dict({
-    "vanilla": train_vanilla,
-    "caps" : train_caps,
-    "l2c2" : train_l2c2,
-    "grad" : train_grad,
-    "asap" : train_asap,
-    "pave" : train_pave,
+    "pave_lips" : train_pave_lips,
 })
 
 save_dir_root = f"./sac/results/pths/"
@@ -58,10 +53,16 @@ parser.add_argument(
 parser.add_argument(
     "--algs",
     nargs="+",
-    choices=["vanilla", "caps", "l2c2", "grad", "asap", "pave"],
-    default=["vanilla", "caps", "l2c2", "grad", "asap", "pave"],
-    help="List of environments to train on."
+    choices=["pave_lips"],
+    default=["pave_lips"],
+    help="List of algorithms to train."
 )
+
+# PAVE Q-Flow parameter overrides
+parser.add_argument("--grad_lamT", type=float, default=None)
+parser.add_argument("--grad_lamS", type=float, default=None)
+parser.add_argument("--grad_lamC", type=float, default=None)
+
 args = parser.parse_args()
 print(f"Selected envs: {args.envs}")
 print(f"Selected algs: {args.algs}")
@@ -69,21 +70,27 @@ print(f"Selected algs: {args.algs}")
 # 테스트할 컨트롤러 목록
 train_algs = args.algs
 # 테스트할 env 목록
-train_envs = args.envs #["ant", "hopper", "humanoid", "lunar", "pendulum", "reacher"]
-
-# 한개 알고리즘을 1개 env에서 테스트하는데 약 2시간 소요
-# -> 모든 env 테스트시 12시간, 모든 알고리즘 테스트시 약 60시간
+train_envs = args.envs
 
 seeds = load_seeds(seed_file_path)
 if len(seeds) < max_num:
     raise ValueError(f"Not enough seeds in {seed_file_path}: required {max_num}, found {len(seeds)}")
+
+# CLI에서 받은 PAVE 파라미터로 오버라이드
+if "pave_lips" in train_algs:
+    for env_name in train_envs:
+        if args.grad_lamT is not None:
+            alg_args["pave_lips"][env_name]["grad_lamT"] = args.grad_lamT
+        if args.grad_lamS is not None:
+            alg_args["pave_lips"][env_name]["grad_lamS"] = args.grad_lamS
+        if args.grad_lamC is not None:
+            alg_args["pave_lips"][env_name]["grad_lamC"] = args.grad_lamC
 
 jobs = []
 for env_name in train_envs:
 
     save_dir = os.path.join(save_dir_root, env_name) + '/'
     log_dir = os.path.join(logs_dir_root, env_name) + '/'
-
 
     os.makedirs(save_dir, exist_ok=True)
 
@@ -106,5 +113,5 @@ with ProcessPoolExecutor(max_workers=max_concurrent_num) as executor:
         else:
             print(f"Job {job_func} completed successfully.")
 
-pth_names = ["vanilla", "caps_sac", "l2c2_sac", "grad_sac", "asap_sac","pave_sac"]
-test_some_path(save_dir_root, True, pth_names, "test_all")
+pth_names = ["pave_lips_sac"]
+test_some_path(save_dir_root, True, pth_names, "test_all_pave_lipsnet")

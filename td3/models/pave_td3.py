@@ -375,6 +375,7 @@ class PaveTD3(TD3):
                           (self.grad_lamT * vfc_loss) + \
                           (self.grad_lamC * curv_loss)
             
+            
             # -----------------------------------------------------------
             # [Standard TD3 Critic Update]
             # -----------------------------------------------------------
@@ -416,6 +417,7 @@ class PaveTD3(TD3):
             # -----------------------------------------------------------
             
             if self._n_updates % self.policy_delay == 0:
+                print(f"[LOSS] q_flow={q_flow_loss.item():.10f}, mpr={mpr_loss.item():.10f}, vfc={vfc_loss.item():.10f}, curv={curv_loss.item():.10f}")
                 # Compute actor loss
                 actor_action = self.actor(replay_data.observations)
                 actor_loss = -self.critic.q1_forward(replay_data.observations, actor_action).mean()

@@ -285,8 +285,15 @@ def train_pave(seed:int, total_time_steps:int, save_dir:str, log_dir:str,
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    # save dir 변경
-    local_save_dir = os.path.join(save_dir, f"pave_td3_{seed}")
+    # save dir 변경 (모든 PAVE 하이퍼파라미터를 이름에 포함)
+    lamS = alg_args.get('grad_lamS', 0.1)
+    lamT = alg_args.get('grad_lamT', 0.1)
+    lamC = alg_args.get('grad_lamC', 0.01)
+    sig = alg_args.get('grad_sigma', 0.01)
+    delta = alg_args.get('grad_delta', 1.0)
+    suffix = f"_S{lamS}_T{lamT}_C{lamC}_sig{sig}_del{delta}"
+    local_save_dir = os.path.join(save_dir, f"pave_td3{suffix}_{seed}")
+    tb_log_name = f"PAVE_TD3{suffix}_{seed}"
     if not os.path.exists(local_save_dir):
         os.makedirs(local_save_dir)
 
@@ -315,7 +322,7 @@ def train_pave(seed:int, total_time_steps:int, save_dir:str, log_dir:str,
     # 강제 저장
     model.save(os.path.join(local_save_dir, 'mid_00000_steps'))
 
-    model.learn(total_timesteps=total_time_steps, tb_log_name=f"PAVE_TD3_{seed}",
+    model.learn(total_timesteps=total_time_steps, tb_log_name=tb_log_name,
                 callback=checkpoint_callback)
     #save file 이름
     save_name = os.path.join(local_save_dir, f"final")
