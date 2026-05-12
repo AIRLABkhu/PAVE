@@ -1,4 +1,4 @@
-# PAVE: Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods
+# [ICML 2026 Spotlight] PAVE: Stabilizing the Q-Gradient Field for Policy Smoothness in Actor-Critic Methods
 
 Official implementation of **PAVE (Policy-Aware Value-field Equalization)**, a critic-centric regularization framework that stabilizes the action-gradient field induced by the Q-function. PAVE is built on top of TD3 and SAC and improves policy smoothness without modifying the actor.
 
